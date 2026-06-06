@@ -43,22 +43,27 @@ export default function SignupPage() {
       return;
     }
 
-    const supabase = createClient();
-    const { error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          state,
-          income_bracket: incomeBracket,
-        },
-      },
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, state, incomeBracket }),
     });
 
-    if (authError) {
-      setError(authError.message);
+    const result = await res.json();
+
+    if (!res.ok || result.error) {
+      setError(result.error || "Signup failed");
       setLoading(false);
       return;
+    }
+
+    // Set session tokens from server response
+    if (result.access_token) {
+      const supabase = createClient();
+      await supabase.auth.setSession({
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+      });
     }
 
     router.push("/dashboard");
