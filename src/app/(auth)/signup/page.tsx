@@ -56,18 +56,8 @@ export default function SignupPage() {
       return;
     }
 
-    // Step 2: Set session from server response, or redirect to login
-    if (result.access_token) {
-      const supabase = createClient();
-      await supabase.auth.setSession({
-        access_token: result.access_token,
-        refresh_token: result.refresh_token,
-      });
-      router.push("/dashboard");
-    } else {
-      router.push("/login?msg=account_created");
-    }
-    router.refresh();
+    // Redirect to login — user signs in manually
+    router.push("/login?msg=created");
   }
 
   return (
