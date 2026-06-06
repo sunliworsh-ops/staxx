@@ -56,17 +56,17 @@ export default function SignupPage() {
       return;
     }
 
-    // Step 2: Sign in normally
-    const supabase = createClient();
-    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
-    if (loginError) {
-      setError("Account created! Please sign in.");
-      setLoading(false);
-      router.push("/login");
-      return;
+    // Step 2: Set session from server response, or redirect to login
+    if (result.access_token) {
+      const supabase = createClient();
+      await supabase.auth.setSession({
+        access_token: result.access_token,
+        refresh_token: result.refresh_token,
+      });
+      router.push("/dashboard");
+    } else {
+      router.push("/login?msg=account_created");
     }
-
-    router.push("/dashboard");
     router.refresh();
   }
 
