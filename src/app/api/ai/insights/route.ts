@@ -42,9 +42,9 @@ Return a JSON array:
   try { return JSON.parse(match[0]); } catch { return []; }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient(request);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

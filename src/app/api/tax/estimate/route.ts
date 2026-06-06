@@ -32,9 +32,9 @@ const STATE_RATES: Record<string, number> = {
   OR: 0.0875, MN: 0.068, WI: 0.053, MD: 0.0475, DC: 0.085,
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
+    const supabase = await createClient(request);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

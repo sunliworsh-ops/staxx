@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const supabase = await createClient();
+  const supabase = await createClient(request);
   await supabase.auth.signOut();
 
   revalidatePath("/", "layout");
