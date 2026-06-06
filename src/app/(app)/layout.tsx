@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth } from "@/components/shared/auth-guard";
+
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import {
   LayoutDashboard,

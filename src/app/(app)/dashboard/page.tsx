@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { Upload, TrendingUp, PieChart } from "lucide-react";
 
