@@ -4,9 +4,9 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(request: Request) {
   try {
     const { email, password, state, incomeBracket } = await request.json();
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const url = "https://ecekeoqkpppitujyhkud.supabase.co";
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const anonKey = "sb_publishable_mi2LYbMdiEjyRYtyEWSUhg_ooRuTiJn";
 
     // Admin client for user management
     const adminClient = createClient(url, serviceKey);
