@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useEffect, type DragEvent } from "react";
 import { UploadCloud, Camera, FileText, ArrowRight, CheckCircle2, Loader2, X, History } from "lucide-react";
+import { authFetch } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 type Step = "upload" | "uploading" | "analyzing" | "done";
@@ -65,7 +65,7 @@ export default function ImportPage() {
   };
 
   useEffect(() => {
-    fetch("/api/import/history")
+    authFetch("/api/import/history")
       .then((r) => r.json())
       .then((d) => setHistory(d.history || []))
       .catch(() => {});
@@ -92,15 +92,9 @@ export default function ImportPage() {
       const endpoint = isImage ? "/api/import/screenshot" : "/api/import/csv";
 
       setStep("analyzing");
-      const supabase = createClient();
-      const { data: { session } } = await supabase.auth.getSession();
-
-      const res = await fetch(endpoint, {
+      const res = await authFetch(endpoint, {
         method: "POST",
         body: formData,
-        headers: session?.access_token
-          ? { Authorization: `Bearer ${session.access_token}` }
-          : {},
       });
 
       if (!res.ok) {

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export const dynamic = "force-dynamic";
 import Link from "next/link";
 import { Upload, TrendingUp, PieChart } from "lucide-react";
+import { authFetch } from "@/lib/api";
 
 interface Stats { income: number; profit: number; estTax: number; taxSaved: number; transactionCount: number; }
 interface TrendItem { month: string; income: number; profit: number; }
@@ -20,10 +21,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/dashboard/stats").then((r) => r.json()),
-      fetch("/api/dashboard/trend").then((r) => r.json()),
-      fetch("/api/dashboard/breakdown").then((r) => r.json()),
-      fetch("/api/ai/insights").then((r) => r.json()),
+      authFetch("/api/dashboard/stats").then((r) => r.json()),
+      authFetch("/api/dashboard/trend").then((r) => r.json()),
+      authFetch("/api/dashboard/breakdown").then((r) => r.json()),
+      authFetch("/api/ai/insights").then((r) => r.json()),
     ]).then(([s, t, b, i]) => {
       setStats(s);
       setTrend(t.trend || []);

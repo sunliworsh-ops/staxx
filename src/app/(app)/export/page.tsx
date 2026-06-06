@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FileDown, FileText, Table2 } from "lucide-react";
+import { authFetch } from "@/lib/api";
 
 interface ScheduleC {
   year: number; grossReceipts: number; platformFees: number;
@@ -12,14 +13,19 @@ interface ScheduleC {
 export default function ExportPage() {
   const [data, setData] = useState<ScheduleC | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("/api/export/schedule-c").then((r) => r.json()).then(setData).finally(() => setLoading(false));
+    authFetch("/api/export/schedule-c").then(async (r) => {
+      if (!r.ok) throw new Error("Failed to load");
+      return r.json();
+    }).then(setData).catch((e) => setError(e.message)).finally(() => setLoading(false));
   }, []);
 
   const fmt = (n: number) => "$" + n.toLocaleString(undefined, { minimumFractionDigits: 0 });
 
   if (loading) return <div className="text-center py-12 text-muted-foreground">Loading...</div>;
+  if (error) return <div className="text-center py-12 text-staxx-coral">Error: {error}</div>;
 
   return (
     <div className="space-y-8">
