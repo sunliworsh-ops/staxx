@@ -1,3 +1,4 @@
+import { requireAuth } from "@/components/shared/auth-guard";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -18,7 +19,8 @@ const NAV_ITEMS = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  await requireAuth();
   return (
     <div className="min-h-screen flex bg-staxx-warm-bg">
       {/* Desktop sidebar */}
