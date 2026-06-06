@@ -17,7 +17,6 @@ import {
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/import", label: "Import", icon: Upload },
   { href: "/writeoffs", label: "Write-Offs", icon: Tag },
   { href: "/export", label: "Export", icon: FileDown },
   { href: "/settings", label: "Settings", icon: Settings },
@@ -78,7 +77,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile bottom nav */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 bg-white border-t z-50">
         <div className="flex items-center justify-around h-16 px-2 safe-bottom">
-          {NAV_ITEMS.slice(0, 5).map((item) => (
+          {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
