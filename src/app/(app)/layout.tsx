@@ -1,4 +1,6 @@
-import { requireAuth } from "@/components/shared/auth-guard";
+"use client";
+
+import { useAuth } from "@/components/shared/auth-guard";
 import Link from "next/link";
 import {
   LayoutDashboard,
@@ -19,8 +21,9 @@ const NAV_ITEMS = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  await requireAuth();
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { loading } = useAuth();
+  if (loading) return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading...</div>;
   return (
     <div className="min-h-screen flex bg-staxx-warm-bg">
       {/* Desktop sidebar */}
