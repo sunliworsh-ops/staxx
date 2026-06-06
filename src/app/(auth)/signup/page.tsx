@@ -43,27 +43,27 @@ export default function SignupPage() {
       return;
     }
 
+    // Step 1: Create user via admin API (no email confirmation needed)
     const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password, state, incomeBracket }),
     });
-
     const result = await res.json();
-
     if (!res.ok || result.error) {
       setError(result.error || "Signup failed");
       setLoading(false);
       return;
     }
 
-    // Set session tokens from server response
-    if (result.access_token) {
-      const supabase = createClient();
-      await supabase.auth.setSession({
-        access_token: result.access_token,
-        refresh_token: result.refresh_token,
-      });
+    // Step 2: Sign in normally
+    const supabase = createClient();
+    const { error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+    if (loginError) {
+      setError("Account created! Please sign in.");
+      setLoading(false);
+      router.push("/login");
+      return;
     }
 
     router.push("/dashboard");
