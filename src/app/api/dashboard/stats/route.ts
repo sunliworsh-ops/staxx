@@ -7,39 +7,17 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const now = new Date();
-    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+    const { searchParams } = new URL(request.url);
+    const start = searchParams.get("start") || `${new Date().getFullYear()}-01`;
+    const end = searchParams.get("end") || `${new Date().getFullYear()}-12`;
 
-    // This month income
-    const { data: monthTx } = await supabase
-      .from("transactions")
-      .select("amount, category")
-      .eq("user_id", user.id)
-      .eq("period", thisMonth);
-
-    const income = (monthTx || []).filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
-    const fees = (monthTx || []).filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+    const { data: tx } = await supabase.from("transactions").select("amount").eq("user_id", user.id).gte("period", `${start}-01`).lte("period", `${end}-01`);
+    const income = (tx || []).filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const fees = (tx || []).filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
     const profit = income - fees;
+    const estTax = Math.round(profit * 0.3);
 
-    // Current quarter tax estimate
-    const quarter = `2026-Q${Math.ceil((now.getMonth() + 1) / 3)}`;
-    const { data: taxData } = await supabase
-      .from("tax_estimates")
-      .select("total_tax_est, amount_saved")
-      .eq("user_id", user.id)
-      .eq("quarter", quarter)
-      .maybeSingle();
-
-    const estTax = taxData?.total_tax_est || Math.round(profit * 0.3 * 100) / 100;
-    const taxSaved = taxData?.amount_saved || 0;
-
-    return NextResponse.json({
-      income: Math.round(income * 100) / 100,
-      profit: Math.round(profit * 100) / 100,
-      estTax,
-      taxSaved,
-      transactionCount: (monthTx || []).length,
-    });
+    return NextResponse.json({ income, profit, estTax, taxSaved: 0, transactionCount: tx?.length || 0 });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }

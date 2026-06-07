@@ -7,33 +7,21 @@ export async function GET(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Last 12 months of income data
-    const { data } = await supabase
-      .from("transactions")
-      .select("amount, period")
-      .eq("user_id", user.id)
-      .order("period", { ascending: true })
-      .limit(500);
+    const { searchParams } = new URL(request.url);
+    const start = searchParams.get("start") || `${new Date().getFullYear()}-01`;
+    const end = searchParams.get("end") || `${new Date().getFullYear()}-12`;
 
-    // Group by month
+    const { data } = await supabase.from("transactions").select("amount, period").eq("user_id", user.id).gte("period", `${start}-01`).lte("period", `${end}-01`).order("period");
+
     const monthly: Record<string, { income: number; fees: number }> = {};
     for (const tx of data || []) {
-      const month = tx.period.slice(0, 7);
-      if (!monthly[month]) monthly[month] = { income: 0, fees: 0 };
-      if (tx.amount > 0) monthly[month].income += tx.amount;
-      else monthly[month].fees += Math.abs(tx.amount);
+      const m = tx.period.slice(0, 7);
+      if (!monthly[m]) monthly[m] = { income: 0, fees: 0 };
+      if (tx.amount > 0) monthly[m].income += tx.amount;
+      else monthly[m].fees += Math.abs(tx.amount);
     }
 
-    const trend = Object.entries(monthly)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-12)
-      .map(([month, values]) => ({
-        month,
-        income: Math.round(values.income * 100) / 100,
-        fees: Math.round(values.fees * 100) / 100,
-        profit: Math.round((values.income - values.fees) * 100) / 100,
-      }));
-
+    const trend = Object.entries(monthly).sort(([a], [b]) => a.localeCompare(b)).map(([month, vals]) => ({ month, income: Math.round(vals.income), profit: Math.round(vals.income - vals.fees) }));
     return NextResponse.json({ trend });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
