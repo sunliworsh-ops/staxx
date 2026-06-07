@@ -3,7 +3,7 @@
  * and text classification of creator platform earnings data.
  */
 
-const API_KEY = process.env.DASHSCOPE_API_KEY!;
+const API_KEY = "sk-58170a8e6ee54c26934bd331b05ee712";
 const BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
 const MODEL = "qwen3-vl-plus";
 

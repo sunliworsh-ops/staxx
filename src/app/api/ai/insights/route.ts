@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-const DASHSCOPE_KEY = process.env.DASHSCOPE_API_KEY!;
+const DASHSCOPE_KEY = "sk-58170a8e6ee54c26934bd331b05ee712";
 
 async function generateInsights(userData: {
   income: number; fees: number; profit: number;
