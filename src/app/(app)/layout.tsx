@@ -6,19 +6,18 @@ export const dynamic = "force-dynamic";
 import Link from "next/link";
 import {
   LayoutDashboard,
-  Upload,
   FileDown,
   Tag,
   Settings,
   LogOut,
-  Menu,
-  X,
+  MessageSquare,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/writeoffs", label: "Write-Offs", icon: Tag },
   { href: "/export", label: "Export", icon: FileDown },
+  { href: "/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

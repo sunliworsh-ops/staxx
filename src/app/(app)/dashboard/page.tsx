@@ -82,7 +82,9 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-staxx-indigo font-display">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Your financial overview</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {hasData ? "Your money, decoded." : "Ready to see how much you actually made?"}
+          </p>
         </div>
         {hasData && (
           <button onClick={() => setShowImport(!showImport)} className="btn-staxx inline-flex h-10 px-4 text-sm">
@@ -104,8 +106,8 @@ export default function DashboardPage() {
             {!file ? (
               <>
                 <Upload className="h-10 w-10 text-staxx-purple/60 mb-3" />
-                <p className="text-base font-semibold text-staxx-indigo">Drop your data here</p>
-                <p className="text-xs text-muted-foreground mt-1">Screenshot or CSV from OnlyFans/Patreon</p>
+                <p className="text-base font-semibold text-staxx-indigo">Drop your earnings here</p>
+                <p className="text-xs text-muted-foreground mt-1">Screenshot or CSV — OnlyFans, Patreon, anywhere. AI does the rest.</p>
                 <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
                   <span><Camera className="inline h-3 w-3" /> Screenshot</span>
                   <span><FileText className="inline h-3 w-3" /> CSV</span>
@@ -149,10 +151,10 @@ export default function DashboardPage() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="stat-card-purple"><div className="text-xs opacity-80">Total Income</div><div className="text-2xl font-bold mt-1 font-mono">{fmt(stats.income)}</div></div>
-          <div className="stat-card-light"><div className="text-xs text-muted-foreground">Net Profit</div><div className="text-2xl font-bold mt-1 font-mono text-staxx-mint">{fmt(stats.profit)}</div></div>
-          <div className="stat-card-warn"><div className="text-xs text-staxx-amber">Est. Tax</div><div className="text-2xl font-bold mt-1 font-mono text-staxx-amber">{fmt(stats.estTax)}</div></div>
-          <div className="stat-card-light"><div className="text-xs text-muted-foreground">Tax Saved</div><div className="text-2xl font-bold mt-1 font-mono text-staxx-coral">{fmt(stats.taxSaved)}</div></div>
+          <div className="stat-card-purple"><div className="text-xs opacity-80">You made</div><div className="text-2xl font-bold mt-1 font-mono">{fmt(stats.income)}</div></div>
+          <div className="stat-card-light"><div className="text-xs text-muted-foreground">You kept</div><div className="text-2xl font-bold mt-1 font-mono text-staxx-mint">{fmt(stats.profit)}</div></div>
+          <div className="stat-card-warn"><div className="text-xs text-staxx-amber">Set aside for tax</div><div className="text-2xl font-bold mt-1 font-mono text-staxx-amber">{fmt(stats.estTax)}</div></div>
+          <div className="stat-card-light"><div className="text-xs text-muted-foreground">Already saved</div><div className="text-2xl font-bold mt-1 font-mono text-staxx-coral">{fmt(stats.taxSaved)}</div></div>
         </div>
       )}
 
