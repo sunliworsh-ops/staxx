@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, type DragEvent } from "react";
-import { Upload, Camera, FileText, ArrowRight, CheckCircle2, Loader2, X, History, Eye, Trash2, ChevronDown } from "lucide-react";
+import { Upload, Camera, FileText, ArrowRight, CheckCircle2, Loader2, X, History, Trash2, ChevronDown, AlertTriangle } from "lucide-react";
 import { authFetch } from "@/lib/api";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
@@ -9,13 +9,15 @@ interface Stats { income: number; profit: number; estTax: number; taxSaved: numb
 interface TrendItem { month: string; income: number; profit: number; }
 interface BreakdownItem { name: string; amount: number; pct: number; }
 interface Insight { category: string; content: string; }
-interface UploadRecord { id: string; file_name: string; file_type: string; source_type: string; transaction_count: number; period_start: string; period_end: string; created_at: string; content_hash?: string; }
+interface UploadRecord { id: string; file_name: string; file_type: string; source_type: string; transaction_count: number; period_start: string; period_end: string; created_at: string; }
 
 type ImportStep = "idle" | "uploading" | "analyzing" | "done";
 
 const DATE_PRESETS = [
-  { label: "Last 3 months", value: "3m" }, { label: "Last 6 months", value: "6m" },
-  { label: "This year", value: "year" }, { label: "Last year", value: "lastyear" }, { label: "All time", value: "all" },
+  { label: "Past week", value: "1w" }, { label: "Past 2 weeks", value: "2w" }, { label: "Past 3 weeks", value: "3w" },
+  { label: "Past month", value: "1m" }, { label: "Past 2 months", value: "2m" }, { label: "Past 3 months", value: "3m" },
+  { label: "Past 4 months", value: "4m" }, { label: "Past 5 months", value: "5m" }, { label: "Past 6 months", value: "6m" },
+  { label: "Past year", value: "year" }, { label: "All time", value: "all" },
 ];
 
 export default function DashboardPage() {
@@ -26,7 +28,6 @@ export default function DashboardPage() {
   const [uploads, setUploads] = useState<UploadRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Import
   const [files, setFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [importStep, setImportStep] = useState<ImportStep>("idle");
@@ -34,23 +35,31 @@ export default function DashboardPage() {
   const [importError, setImportError] = useState("");
   const [importWarnings, setImportWarnings] = useState<string[]>([]);
 
-  // Date filter
-  const [datePreset, setDatePreset] = useState("year");
+  const [datePreset, setDatePreset] = useState("3m");
   const [showDateDropdown, setShowDateDropdown] = useState(false);
 
-  // Preview modal
   const [previewUpload, setPreviewUpload] = useState<UploadRecord | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const getDateRange = useCallback(() => {
-    const now = new Date();
-    const y = now.getFullYear(), m = now.getMonth() + 1;
+    const now = new Date(); now.setHours(23, 59, 59, 999);
+    const end = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const past = new Date(now);
     switch (datePreset) {
-      case "3m": return { start: `${y}-${String(Math.max(1, m - 2)).padStart(2, "0")}`, end: `${y}-${String(m).padStart(2, "0")}` };
-      case "6m": return { start: `${y}-${String(Math.max(1, m - 5)).padStart(2, "0")}`, end: `${y}-${String(m).padStart(2, "0")}` };
-      case "year": return { start: `${y}-01`, end: `${y}-12` };
-      case "lastyear": return { start: `${y - 1}-01`, end: `${y - 1}-12` };
-      default: return { start: "2020-01", end: `${y + 1}-12` };
+      case "1w": past.setDate(past.getDate() - 7); break;
+      case "2w": past.setDate(past.getDate() - 14); break;
+      case "3w": past.setDate(past.getDate() - 21); break;
+      case "1m": past.setMonth(past.getMonth() - 1); break;
+      case "2m": past.setMonth(past.getMonth() - 2); break;
+      case "3m": past.setMonth(past.getMonth() - 3); break;
+      case "4m": past.setMonth(past.getMonth() - 4); break;
+      case "5m": past.setMonth(past.getMonth() - 5); break;
+      case "6m": past.setMonth(past.getMonth() - 6); break;
+      case "year": past.setFullYear(past.getFullYear() - 1); break;
+      default: past.setFullYear(2020);
     }
+    return { start: past.toISOString().slice(0, 10), end };
   }, [datePreset]);
 
   const refreshData = useCallback(() => {
@@ -95,60 +104,59 @@ export default function DashboardPage() {
   const resetImport = useCallback(() => { setFiles([]); setImportStep("idle"); setImportResult(null); setImportError(""); setImportWarnings([]); }, []);
 
   const handleDeleteUpload = async (id: string) => {
+    setDeleting(true);
     await authFetch(`/api/uploads/${id}`, { method: "DELETE" });
     setUploads((prev) => prev.filter((u) => u.id !== id));
-    setPreviewUpload(null);
+    setPreviewUpload(null); setDeleteConfirm(null); setDeleting(false);
+    refreshData();
   };
 
   const fmt = (n: number) => "$" + (n || 0).toLocaleString(undefined, { minimumFractionDigits: 0 });
   const hasData = stats && stats.transactionCount > 0;
+  const barWidth = trend.length <= 3 ? 40 : trend.length <= 6 ? 30 : undefined;
 
   if (loading) return <div className="text-center py-16 text-muted-foreground">Loading your dashboard...</div>;
 
   return (
     <div className="space-y-6">
-      {/* Header + Date */}
+      {/* Header + Date selector */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-staxx-indigo font-display">Dashboard</h1>
           <p className="text-sm text-muted-foreground">{hasData ? "Your money, decoded." : "Ready to see how much you actually made?"}</p>
         </div>
-        {hasData && (
-          <div className="relative">
-            <button onClick={() => setShowDateDropdown(!showDateDropdown)}
-              className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2 text-sm font-medium text-staxx-indigo hover:bg-muted transition-colors">
-              {DATE_PRESETS.find((p) => p.value === datePreset)?.label || "Custom"}
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            </button>
-            {showDateDropdown && (
-              <div className="absolute right-0 mt-1 w-44 rounded-xl border bg-white shadow-lg z-10 py-1"
-                onMouseLeave={() => setShowDateDropdown(false)}>
-                {DATE_PRESETS.map((p) => (
-                  <button key={p.value} onClick={() => { setDatePreset(p.value); setShowDateDropdown(false); }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-staxx-purple/5 transition-colors ${datePreset === p.value ? "text-staxx-purple font-semibold" : "text-muted-foreground"}`}>
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="relative">
+          <button onClick={() => setShowDateDropdown(!showDateDropdown)}
+            className="flex items-center gap-2 rounded-xl border bg-white px-4 py-2 text-sm font-medium text-staxx-indigo hover:bg-muted transition-colors">
+            {DATE_PRESETS.find((p) => p.value === datePreset)?.label || "Custom"}
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </button>
+          {showDateDropdown && (
+            <div className="absolute right-0 mt-1 w-48 rounded-xl border bg-white shadow-lg z-10 py-1 max-h-64 overflow-y-auto"
+              onMouseLeave={() => setShowDateDropdown(false)}>
+              {DATE_PRESETS.map((p) => (
+                <button key={p.value} onClick={() => { setDatePreset(p.value); setShowDateDropdown(false); }}
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-staxx-purple/5 transition-colors ${datePreset === p.value ? "text-staxx-purple font-semibold" : "text-muted-foreground"}`}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Upload Zone — always visible */}
       <div className={`rounded-2xl border bg-white transition-all ${!hasData ? "p-6" : "p-3"}`}>
         <div
           className={`upload-zone ${dragOver ? "border-staxx-purple bg-staxx-purple/5" : ""} ${!hasData ? "py-8" : "py-3"}`}
-          onDrop={handleDrop}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDrop={handleDrop} onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
-          onClick={() => !files.length && document.getElementById("dash-file-input")?.click()}
-        >
+          onClick={() => !files.length && document.getElementById("dash-file-input")?.click()}>
           {files.length === 0 ? (
             <div className="text-center">
               <Upload className="h-8 w-8 text-staxx-purple/50 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-staxx-indigo">Drop earnings data here</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Screenshots or CSVs — AI does the rest</p>
+              <p className="text-sm font-semibold text-staxx-indigo">Drop earnings or receipts here</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Screenshots of income AND expenses — AI reads both</p>
             </div>
           ) : (
             <div className="w-full space-y-1.5">
@@ -172,11 +180,10 @@ export default function DashboardPage() {
         )}
         {(importStep === "uploading" || importStep === "analyzing") && (
           <div className="text-center py-3 mt-3"><Loader2 className="h-5 w-5 text-staxx-purple animate-spin mx-auto" />
-            <p className="text-xs text-muted-foreground mt-1">{importStep === "uploading" ? "Uploading..." : "AI reading..."}</p></div>
+            <p className="text-xs text-muted-foreground mt-1">{importStep === "uploading" ? "Uploading..." : "AI reading income & expenses..."}</p></div>
         )}
         {importError && <div className="rounded-xl bg-red-50 border border-red-200 p-3 mt-3 text-sm text-red-700">{importError}</div>}
         {importWarnings.map((w, i) => <p key={i} className="text-xs text-amber-600 mt-1">⚠️ {w}</p>)}
-
         {importStep === "done" && importResult && (
           <div className="rounded-xl bg-green-50 border border-green-200 p-3 mt-3 text-center">
             <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto" />
@@ -199,14 +206,11 @@ export default function DashboardPage() {
         <div className="rounded-2xl border bg-white p-5">
           <h2 className="text-sm font-semibold text-staxx-indigo mb-3">📈 Income Trend</h2>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={trend.map((t) => ({ ...t, income: Math.round(t.income), profit: Math.round(t.profit) }))}>
+            <BarChart data={trend.map((t) => ({ ...t, income: Math.round(t.income), profit: Math.round(t.profit) }))} barSize={barWidth} maxBarSize={50}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#888" }} tickFormatter={(v) => v.slice(5)} />
               <YAxis tick={{ fontSize: 11, fill: "#888" }} tickFormatter={(v) => fmt(v)} width={60} />
-              <Tooltip
-                contentStyle={{ borderRadius: 12, border: "1px solid #e8e0f0", fontSize: 13 }}
-                formatter={(value: any) => fmt(Number(value))}
-              />
+              <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e8e0f0", fontSize: 13 }} formatter={(value: any) => fmt(Number(value))} />
               <Bar dataKey="income" fill="#7C3AED" radius={[6, 6, 0, 0]} name="Income" />
               <Bar dataKey="profit" fill="#34D399" radius={[6, 6, 0, 0]} name="Profit" />
             </BarChart>
@@ -224,13 +228,12 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Platform Breakdown */}
       {breakdown.length > 1 && (
         <div className="rounded-2xl border bg-white p-5">
           <h2 className="text-sm font-semibold text-staxx-indigo mb-3">🍩 By Platform</h2>
           {breakdown.map((p) => (
             <div key={p.name} className="flex items-center gap-3 mb-2">
-              <span className="text-sm font-medium capitalize w-20 text-staxx-indigo">{p.name}</span>
+              <span className="text-sm font-medium capitalize w-20">{p.name}</span>
               <div className="flex-1 h-4 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-staxx-purple" style={{ width: `${p.pct}%` }} /></div>
               <span className="text-sm font-mono text-muted-foreground">{p.pct}%</span>
             </div>
@@ -243,15 +246,16 @@ export default function DashboardPage() {
         <div className="rounded-2xl border bg-white p-5">
           <h2 className="text-sm font-semibold text-staxx-indigo mb-3">📋 Upload History</h2>
           <div className="space-y-1">
-            {uploads.slice(0, 6).map((u) => (
+            {uploads.slice(0, 8).map((u) => (
               <div key={u.id} className="flex items-center justify-between rounded-lg hover:bg-muted/50 p-2 text-sm group">
-                <button onClick={() => setPreviewUpload(u)} className="flex items-center gap-2 min-w-0 flex-1 text-left">
+                <button onClick={() => { setPreviewUpload(u); setDeleteConfirm(null); }} className="flex items-center gap-2 min-w-0 flex-1 text-left">
                   <span>{u.source_type === "screenshot" ? "📸" : "📄"}</span>
                   <span className="truncate text-staxx-indigo">{u.file_name}</span>
                   <span className="text-xs text-muted-foreground">{u.transaction_count} tx</span>
                 </button>
                 <span className="text-xs text-muted-foreground mr-2">{u.created_at?.slice(0, 10)}</span>
-                <button onClick={() => handleDeleteUpload(u.id)} className="opacity-0 group-hover:opacity-100 text-staxx-coral hover:bg-red-50 rounded-lg p-1 transition-all"><Trash2 className="h-3.5 w-3.5" /></button>
+                <button onClick={() => setDeleteConfirm(u.id)}
+                  className="opacity-0 group-hover:opacity-100 text-staxx-coral hover:bg-red-50 rounded-lg p-1 transition-all"><Trash2 className="h-3.5 w-3.5" /></button>
               </div>
             ))}
           </div>
@@ -260,25 +264,35 @@ export default function DashboardPage() {
 
       {/* Preview Modal */}
       {previewUpload && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setPreviewUpload(null)}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => { setPreviewUpload(null); setDeleteConfirm(null); }}>
           <div className="bg-white rounded-2xl max-w-lg w-full p-5 space-y-3" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-staxx-indigo">{previewUpload.file_name}</h3>
-              <button onClick={() => setPreviewUpload(null)}><X className="h-4 w-4" /></button>
+              <button onClick={() => { setPreviewUpload(null); setDeleteConfirm(null); }}><X className="h-4 w-4" /></button>
             </div>
-            <div className="rounded-xl bg-muted p-8 text-center text-4xl">
-              {previewUpload.source_type === "screenshot" ? "📸" : "📄"}
-            </div>
+            <div className="rounded-xl bg-muted p-8 text-center text-4xl">{previewUpload.source_type === "screenshot" ? "📸" : "📄"}</div>
             <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-              <div>Type: <span className="text-staxx-indigo font-medium">{previewUpload.source_type}</span></div>
-              <div>Transactions: <span className="text-staxx-indigo font-medium">{previewUpload.transaction_count}</span></div>
-              {previewUpload.period_start && <div>From: <span className="text-staxx-indigo font-medium">{previewUpload.period_start?.slice(0, 7)}</span></div>}
-              {previewUpload.period_end && <div>To: <span className="text-staxx-indigo font-medium">{previewUpload.period_end?.slice(0, 7)}</span></div>}
+              <div>Type: <span className="font-medium">{previewUpload.source_type}</span></div>
+              <div>Transactions: <span className="font-medium">{previewUpload.transaction_count}</span></div>
+              {previewUpload.period_start && <div>From: <span className="font-medium">{previewUpload.period_start?.slice(0, 7)}</span></div>}
+              {previewUpload.period_end && <div>To: <span className="font-medium">{previewUpload.period_end?.slice(0, 7)}</span></div>}
             </div>
-            <button onClick={() => handleDeleteUpload(previewUpload.id)}
-              className="w-full rounded-xl border border-red-200 py-2 text-sm text-staxx-coral hover:bg-red-50 transition-colors">
-              <Trash2 className="inline h-3 w-3 mr-1" /> Delete this upload
-            </button>
+
+            {deleteConfirm === previewUpload.id ? (
+              <div className="rounded-xl bg-red-50 border border-red-200 p-3 space-y-2">
+                <div className="flex items-center gap-2 text-sm text-red-700"><AlertTriangle className="h-4 w-4" />Delete this upload and all its {previewUpload.transaction_count} transactions?</div>
+                <div className="flex gap-2">
+                  <button onClick={() => handleDeleteUpload(previewUpload.id)} disabled={deleting}
+                    className="flex-1 rounded-lg bg-red-500 text-white py-1.5 text-sm font-semibold">{deleting ? "Deleting..." : "Yes, delete"}</button>
+                  <button onClick={() => setDeleteConfirm(null)} className="flex-1 rounded-lg border py-1.5 text-sm">Cancel</button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => setDeleteConfirm(previewUpload.id)}
+                className="w-full rounded-xl border border-red-200 py-2 text-sm text-staxx-coral hover:bg-red-50 transition-colors">
+                <Trash2 className="inline h-3 w-3 mr-1" /> Delete this upload
+              </button>
+            )}
           </div>
         </div>
       )}

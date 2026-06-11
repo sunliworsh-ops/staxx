@@ -58,33 +58,39 @@ export async function classifyScreenshot(
   imageBase64: string,
   mediaType: string
 ): Promise<AIClassificationResult> {
-  const prompt = `You are analyzing a screenshot from a creator platform (OnlyFans, Patreon, Fansly, etc.) earnings dashboard or payment page.
+  const prompt = `You are analyzing a screenshot. It could be ANY of the following:
+A) A creator platform earnings dashboard (OnlyFans, Patreon, Fansly, etc.)
+B) A receipt or invoice for a business purchase (equipment, software, supplies, etc.)
+C) A payment confirmation or bank transaction
 
-Extract ALL monetary values visible in the screenshot. For each value found, output a JSON object with this exact structure:
+Extract ALL monetary values visible. For INCOME screenshots, classify by category. For EXPENSE receipts, mark the total as a negative amount under the appropriate expense category.
 
+Categories:
+- Income: subscription, ppv, tip, platform_fee, referral, other_income
+- Expenses (NEGATIVE amounts): equipment, software, props_wardrobe, internet_phone, home_office, promotion, travel, education, accounting, health_insurance, rent, other_expense
+
+Output JSON:
 {
   "transactions": [
     {
-      "platform": "onlyfans|patreon|fansly|cashapp|venmo|other",
-      "category": "subscription|ppv|tip|platform_fee|referral|other_income",
+      "platform": "onlyfans|patreon|fansly|amazon|bhphoto|adobe|other",
+      "category": "subscription|ppv|tip|platform_fee|equipment|software|props_wardrobe|other_expense",
       "amount": 6200.00,
       "period": "2026-06",
       "confidence": 0.95
     }
   ],
-  "unrecognized": [
-    {"text": "description of what you couldn't classify", "amount": 350.00}
-  ]
+  "unrecognized": [{"text": "description", "amount": 350.00}],
+  "document_type": "earnings|receipt|bank_statement"
 }
 
-Rules:
-- Platform fees are NEGATIVE amounts (e.g., -2490.00 for OF 20% cut)
-- "Gross" means before platform cut; "Net" means after platform cut
-- If you see both gross and net, use gross and add a separate platform fee entry
-- If screenshot shows totals only, estimate fees based on known rates: OF=20%, Patreon=5-12%, Fansly=20%, ManyVids=40%
-- Period should be inferred from screenshot context (YYYY-MM format)
-- confidence: 0.95 for clearly readable numbers, 0.70 for estimated/partial
-- Put anything you cannot confidently classify in unrecognized
+Key rules:
+- INCOME amounts are POSITIVE, EXPENSE amounts are NEGATIVE (e.g., -5472.04 for a camera purchase)
+- Platform fees are NEGATIVE (e.g., -2490.00 for OF 20% cut)
+- Tax on receipts is part of the expense total
+- Look for dates anywhere on the image (top, bottom, header) to determine period
+- confidence: 0.95 for clear numbers, 0.70 for blurry/partial
+- Include the document_type field to indicate what kind of document this is
 
 Output ONLY the JSON object, no other text.`;
 
