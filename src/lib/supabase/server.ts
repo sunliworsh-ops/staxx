@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 
 const SUPABASE_URL = "https://ecekeoqkpppitujyhkud.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_mi2LYbMdiEjyRYtyEWSUhg_ooRuTiJn";
-const SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjZWtlb3FrcHBwaXR1anloa3VkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDcyOTcxMywiZXhwIjoyMDk2MzA1NzEzfQ.j3PAZ-ih9GUozcCPeUlgU8oPcLK92VOVVJDi_3PHfO8";
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 function extractToken(req?: Request): string {
   if (req) {
