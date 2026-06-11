@@ -185,10 +185,16 @@ export default function DashboardPage() {
         {importError && <div className="rounded-xl bg-red-50 border border-red-200 p-3 mt-3 text-sm text-red-700">{importError}</div>}
         {importWarnings.map((w, i) => <p key={i} className="text-xs text-amber-600 mt-1">⚠️ {w}</p>)}
         {importStep === "done" && importResult && (
-          <div className="rounded-xl bg-green-50 border border-green-200 p-3 mt-3 text-center">
+          <div className="rounded-xl bg-green-50 border border-green-200 p-3 mt-3 text-center space-y-1">
             <CheckCircle2 className="h-5 w-5 text-green-500 mx-auto" />
-            <p className="text-sm font-semibold text-green-800 mt-1">{importResult.total_new_transactions} new tx · {importResult.files_processed} files</p>
-            <button onClick={resetImport} className="text-xs text-green-700 underline mt-1">Done — upload more</button>
+            <p className="text-sm font-semibold text-green-800">{importResult.total_new_transactions} new tx · {importResult.files_processed} files</p>
+            {importResult.results?.map((r: any, i: number) => (
+              <p key={i} className="text-xs text-green-700">
+                {r.file}: ${r.income?.toLocaleString() || 0} income · ${r.fees?.toLocaleString() || 0} fees
+                {r.skipped > 0 && <span className="text-amber-600"> · {r.skipped} skipped</span>}
+              </p>
+            ))}
+            <button onClick={resetImport} className="text-xs text-green-700 underline">Done — upload more</button>
           </div>
         )}
       </div>
