@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const start = searchParams.get("start") || `${new Date().getFullYear()}-01`;
     const end = searchParams.get("end") || `${new Date().getFullYear()}-12`;
 
-    const { data } = await supabase.from("transactions").select("platform, amount").eq("user_id", user.id).gte("period", `${start}-01`).lte("period", `${end}-01`);
+    const { data } = await supabase.from("transactions").select("platform, amount").eq("user_id", user.id).gte("period", start).lte("period", end);
 
     const platforms: Record<string, number> = {};
     for (const tx of data || []) {

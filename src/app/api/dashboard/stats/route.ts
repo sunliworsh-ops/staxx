@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const start = searchParams.get("start") || `${new Date().getFullYear()}-01`;
     const end = searchParams.get("end") || `${new Date().getFullYear()}-12`;
 
-    const { data: tx } = await supabase.from("transactions").select("amount").eq("user_id", user.id).gte("period", `${start}-01`).lte("period", `${end}-01`);
+    const { data: tx } = await supabase.from("transactions").select("amount").eq("user_id", user.id).gte("period", start).lte("period", end);
     const income = (tx || []).filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
     const fees = (tx || []).filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
     const profit = income - fees;

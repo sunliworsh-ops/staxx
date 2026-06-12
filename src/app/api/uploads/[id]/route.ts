@@ -9,24 +9,20 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
     const { id } = await params;
 
-    // Get upload info first
-    const { data: upload } = await supabase.from("uploads").select("*").eq("id", id).eq("user_id", user.id).single();
+    // Verify upload belongs to user
+    const { data: upload } = await supabase.from("uploads").select("id, transaction_count").eq("id", id).eq("user_id", user.id).single();
     if (!upload) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    // Delete associated transactions (close to upload time, same user)
-    const uploadTime = new Date(upload.created_at);
-    const windowStart = new Date(uploadTime.getTime() - 60000).toISOString();
-    const windowEnd = new Date(uploadTime.getTime() + 60000).toISOString();
-
-    await supabase.from("transactions").delete()
-      .eq("user_id", user.id)
-      .gte("created_at", windowStart)
-      .lte("created_at", windowEnd);
+    // Delete transactions by upload_id (new data) + orphaned fallback
+    const { data: linked } = await supabase.from("transactions").select("id").eq("upload_id", id);
+    if (linked && linked.length > 0) {
+      await supabase.from("transactions").delete().eq("upload_id", id);
+    }
 
     // Delete the upload record
     await supabase.from("uploads").delete().eq("id", id).eq("user_id", user.id);
 
-    return NextResponse.json({ success: true, transactions_removed: upload.transaction_count });
+    return NextResponse.json({ success: true, removed: linked?.length || 0 });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }

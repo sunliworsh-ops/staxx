@@ -27,8 +27,8 @@ export default function PricingPage() {
         <div className="rounded-2xl border-2 border-staxx-purple bg-white p-8 relative">
           <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-staxx-purple px-4 py-1 text-xs font-semibold text-white">Most Popular</div>
           <h3 className="text-lg font-semibold text-staxx-indigo">Pro</h3>
-          <div className="mt-3"><span className="text-4xl font-bold text-staxx-indigo">$19</span><span className="text-muted-foreground">/month</span></div>
-          <p className="mt-2 text-sm text-muted-foreground">$190/year — save 2 months</p>
+          <div className="mt-3"><span className="text-4xl font-bold text-staxx-indigo">$19.99</span><span className="text-muted-foreground">/month</span></div>
+          <p className="mt-2 text-sm text-muted-foreground">$199/year — save $41</p>
           <ul className="mt-6 space-y-2">
             {["Unlimited imports","AI insights & tax tips","Tax Write-Offs checklist","Schedule C export (PDF/CSV)","Full transaction history","Priority email support"].map((f) => (
               <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground"><Check className="mt-0.5 h-4 w-4 shrink-0 text-staxx-purple" />{f}</li>

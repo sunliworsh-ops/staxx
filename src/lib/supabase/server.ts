@@ -30,12 +30,9 @@ export async function createClient(req?: Request) {
   if (token) {
     const userId = parseUserId(token);
     if (userId) {
-      // Use service_role to create a client authenticated as the user
-      return createSupabaseClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+      return createSupabaseClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: { autoRefreshToken: false, persistSession: false },
-        global: {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+        global: { headers: { Authorization: `Bearer ${token}` } },
       });
     }
   }

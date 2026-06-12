@@ -154,7 +154,7 @@ export default function SignupPage() {
           disabled={loading}
           className="btn-staxx w-full h-11"
         >
-          {loading ? "Creating account..." : "Create Free Account"}
+          {loading ? "Creating account..." : "3 free analyzes · $19.99/mo after"}
         </Button>
       </form>
 

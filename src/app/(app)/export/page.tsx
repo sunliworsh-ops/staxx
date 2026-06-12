@@ -23,25 +23,27 @@ export default function ExportPage() {
     }).then(setData).catch((e) => setError(e.message)).finally(() => setLoading(false));
   }, []);
 
-  const handleCSVDownload = async () => {
+  const getToken = async () => {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token || "";
+  };
+
+  const handleDownload = async (endpoint: string, ext: string) => {
     try {
-      const supabase = createClient();
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
+      const token = await getToken();
       if (!token) { setError("Please sign in first"); return; }
-
-      const res = await fetch("/api/export/csv", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error("Download failed");
-
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
-      a.href = url; a.download = `staxx-export-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.href = url; a.download = `staxx-${ext}-${new Date().toISOString().slice(0, 10)}.${ext === "txf" ? "txf" : ext}`;
       a.click(); URL.revokeObjectURL(url);
     } catch (e) { setError("Download failed. Try again."); }
   };
+
+  const handleCSVDownload = () => handleDownload("/api/export/csv", "csv");
 
   const fmt = (n: number) => "$" + n.toLocaleString(undefined, { minimumFractionDigits: 0 });
 
@@ -80,16 +82,21 @@ export default function ExportPage() {
             <button onClick={handleCSVDownload}
               className="flex items-center gap-3 w-full rounded-xl border bg-white p-4 hover:bg-muted/50 transition-colors text-left">
               <Table2 className="h-5 w-5 text-staxx-purple shrink-0" />
-              <div><p className="text-sm font-semibold text-staxx-indigo">Download CSV</p><p className="text-xs text-muted-foreground">Import into Excel, Google Sheets, or TurboTax</p></div>
+              <div><p className="text-sm font-semibold text-staxx-indigo">CSV Spreadsheet</p><p className="text-xs text-muted-foreground">Import into Excel, Google Sheets</p></div>
             </button>
-            <div className="flex items-center gap-3 rounded-xl border bg-white p-4 opacity-50">
-              <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-              <div><p className="text-sm font-semibold text-staxx-indigo">PDF Report</p><p className="text-xs text-muted-foreground">Coming soon — use CSV for now</p></div>
-            </div>
-            <div className="flex items-center gap-3 rounded-xl border bg-white p-4 opacity-50">
-              <FileDown className="h-5 w-5 text-muted-foreground shrink-0" />
-              <div><p className="text-sm font-semibold text-staxx-indigo">TurboTax Import</p><p className="text-xs text-muted-foreground">Coming soon — use CSV for now</p></div>
-            </div>
+            <button onClick={async () => {
+                const token = await getToken();
+                if (token) window.open(`/api/export/pdf?token=${encodeURIComponent(token)}`, "_blank");
+              }}
+              className="flex items-center gap-3 w-full rounded-xl border bg-white p-4 hover:bg-muted/50 transition-colors text-left">
+              <FileText className="h-5 w-5 text-staxx-purple shrink-0" />
+              <div><p className="text-sm font-semibold text-staxx-indigo">PDF Report</p><p className="text-xs text-muted-foreground">Opens printable report — use Print → Save as PDF</p></div>
+            </button>
+            <button onClick={() => handleDownload("/api/export/turbotax", "txf")}
+              className="flex items-center gap-3 w-full rounded-xl border bg-white p-4 hover:bg-muted/50 transition-colors text-left">
+              <FileDown className="h-5 w-5 text-staxx-purple shrink-0" />
+              <div><p className="text-sm font-semibold text-staxx-indigo">TurboTax Import (.txf)</p><p className="text-xs text-muted-foreground">Direct import into TurboTax Self-Employed</p></div>
+            </button>
           </div>
         </>
       ) : (
