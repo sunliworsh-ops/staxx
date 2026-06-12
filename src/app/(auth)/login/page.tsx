@@ -28,7 +28,7 @@ function LoginForm() {
     });
 
     if (authError) {
-      setError("Invalid email or password. Try again.");
+      setError(authError.message?.includes("Invalid login") ? "Wrong email or password." : "Unable to sign in. Check your connection and try again.");
       setLoading(false);
       return;
     }
