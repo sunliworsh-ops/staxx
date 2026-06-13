@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       const base64 = buffer.toString("base64");
 
       if (existingHashes.has(contentHash)) {
-        warnings.push(`"${file.name}" already uploaded — skipped`); continue;
+        warnings.push(`"${file.name}" duplicate — already imported, skipped`); continue;
       }
       existingHashes.add(contentHash);
 
