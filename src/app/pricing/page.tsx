@@ -1,7 +1,25 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 
 export default function PricingPage() {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://www.paypal.com/sdk/js?client-id=AQR_tnfN5I4ZXURBbUfyUcXBUUHvPh_kLuvC2xU4vk3hyT8__fxriomEeOQXjvS7VCPHdKTb-3saTZSN&vault=true&intent=subscription";
+    script.setAttribute("data-sdk-integration-source", "button-factory");
+    script.onload = () => {
+      if ((window as any).paypal) {
+        (window as any).paypal.Buttons({
+          style: { shape: "rect", color: "gold", layout: "vertical", label: "subscribe" },
+          createSubscription: (_data: any, actions: any) => actions.subscription.create({ plan_id: "P-2VU04307H85349832NIWDFCQ" }),
+          onApprove: (_data: any) => { alert("Thanks for subscribing to Staxx Pro!"); },
+        }).render("#paypal-button-container-P-2VU04307H85349832NIWDFCQ");
+      }
+    };
+    document.body.appendChild(script);
+  }, []);
   return (
     <div className="min-h-screen bg-staxx-warm-bg py-16 px-4">
       <div className="text-center mb-12">
@@ -34,8 +52,8 @@ export default function PricingPage() {
               <li key={f} className="flex items-start gap-2 text-sm text-muted-foreground"><Check className="mt-0.5 h-4 w-4 shrink-0 text-staxx-purple" />{f}</li>
             ))}
           </ul>
-          <Link href="/signup" className="btn-staxx mt-6 w-full h-11 text-sm">Start Free Trial</Link>
-          <p className="text-xs text-muted-foreground text-center mt-2">14 days free · no credit card</p>
+          <div id="paypal-button-container-P-2VU04307H85349832NIWDFCQ" className="mt-6 mx-auto max-w-[300px]" />
+          <p className="text-xs text-muted-foreground text-center mt-2">Cancel anytime · 3 free analyzes on signup</p>
         </div>
       </div>
     </div>
