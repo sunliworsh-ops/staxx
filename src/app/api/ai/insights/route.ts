@@ -51,17 +51,22 @@ export async function GET(request: Request) {
     const now = new Date();
     const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
 
-    // Check for existing insights today
-    const today = new Date().toISOString().slice(0, 10);
-    const { data: existing } = await supabase
-      .from("insights")
-      .select("id, category, content, dismissed")
-      .eq("user_id", user.id)
-      .gte("created_at", today)
-      .order("created_at", { ascending: false });
+    const { searchParams } = new URL(request.url);
+    const force = searchParams.get("force") === "true";
 
-    if (existing && existing.length > 0) {
-      return NextResponse.json({ insights: existing });
+    // Check for existing insights today (skip if force refresh)
+    if (!force) {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: existing } = await supabase
+        .from("insights")
+        .select("id, category, content, dismissed")
+        .eq("user_id", user.id)
+        .gte("created_at", today)
+        .order("created_at", { ascending: false });
+
+      if (existing && existing.length > 0) {
+        return NextResponse.json({ insights: existing });
+      }
     }
 
     // Gather user data for insight generation

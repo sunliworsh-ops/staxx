@@ -294,7 +294,11 @@ export default function DashboardPage() {
 
       {insights.length > 0 && (
         <div className="rounded-2xl border bg-white p-5">
-          <h2 className="text-sm font-semibold text-staxx-indigo mb-3">🤖 AI Insights</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-staxx-indigo">🤖 AI Insights</h2>
+            <button onClick={() => { authFetch("/api/ai/insights?force=true").then((r) => r.json()).then((d) => setInsights(d.insights || [])); }}
+              className="text-xs text-staxx-purple hover:underline">Refresh</button>
+          </div>
           {insights.slice(0, 2).map((ins, i) => (
             <div key={i} className="flex items-start gap-2 rounded-xl bg-staxx-purple/5 p-3 text-sm text-staxx-indigo mb-2"><span>💡</span><span>{ins.content}</span></div>
           ))}
