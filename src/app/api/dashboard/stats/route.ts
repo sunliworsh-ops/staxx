@@ -17,7 +17,12 @@ export async function GET(request: Request) {
     const profit = income - fees;
     const estTax = Math.round(profit * 0.3);
 
-    return NextResponse.json({ income, profit, estTax, taxSaved: 0, transactionCount: tx?.length || 0 });
+    const { data: profile } = await supabase.from("profiles").select("analyze_count, subscription_tier").eq("id", user.id).single();
+    return NextResponse.json({
+      income, profit, estTax, taxSaved: 0, transactionCount: tx?.length || 0,
+      analyzeCount: profile?.analyze_count || 0,
+      subscriptionTier: profile?.subscription_tier || "free",
+    });
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 });
   }
