@@ -124,7 +124,14 @@ export default function DashboardPage() {
       setImportStep("analyzing");
       const hasImages = files.some((f) => f.type.startsWith("image/"));
       const res = await authFetch(hasImages ? "/api/import/screenshot" : "/api/import/csv", { method: "POST", body: formData });
-      if (!res.ok) throw new Error((await res.json()).error || "Import failed");
+      const resData = await res.json();
+      if (!res.ok) {
+        if (res.status === 402) {
+          setImportError("free_limit");
+          return;
+        }
+        throw new Error(resData.error || "Import failed");
+      }
       setImportResult(await res.json()); setImportStep("done"); refreshData();
     } catch (err) { setImportError(err instanceof Error ? err.message : "Failed"); setImportStep("idle"); }
   }, [files, refreshData]);
@@ -234,7 +241,15 @@ export default function DashboardPage() {
         {importStep === "idle" && files.length > 0 && (
           <button onClick={handleAnalyze} className="btn-staxx w-full h-10 mt-3 text-sm">Analyze <ArrowRight className="h-3 w-3" /></button>
         )}
-        {importError && <div className="rounded-xl bg-red-50 border border-red-200 p-3 mt-3 text-sm text-red-700">{importError}</div>}
+        {importError === "free_limit" ? (
+          <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mt-3 text-center space-y-3">
+            <p className="text-lg font-semibold text-amber-800">🎉 You've used all 3 free analyzes!</p>
+            <p className="text-sm text-amber-700">Upgrade to Pro for unlimited analyzes, AI insights, tax write-offs, and PDF exports.</p>
+            <a href="/pricing" className="btn-staxx inline-flex h-10 px-6 text-sm">Upgrade to Pro — $19.99/mo</a>
+          </div>
+        ) : importError ? (
+          <div className="rounded-xl bg-red-50 border border-red-200 p-3 mt-3 text-sm text-red-700">{importError}</div>
+        ) : null}
 
         {importStep === "done" && importResult && (
           <div className="rounded-xl bg-green-50 border border-green-200 p-3 mt-3 text-center space-y-1">
