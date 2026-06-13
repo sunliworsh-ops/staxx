@@ -126,13 +126,10 @@ export default function DashboardPage() {
       const res = await authFetch(hasImages ? "/api/import/screenshot" : "/api/import/csv", { method: "POST", body: formData });
       const resData = await res.json();
       if (!res.ok) {
-        if (res.status === 402) {
-          setImportError("free_limit");
-          return;
-        }
-        throw new Error(resData.error || "Import failed");
+        if (res.status === 402) { setImportError("free_limit"); return; }
+        throw new Error(resData.error || "Something went wrong. Try again.");
       }
-      setImportResult(await res.json()); setImportStep("done"); refreshData();
+      setImportResult(resData); setImportStep("done"); refreshData();
     } catch (err) { setImportError(err instanceof Error ? err.message : "Failed"); setImportStep("idle"); }
   }, [files, refreshData]);
 
