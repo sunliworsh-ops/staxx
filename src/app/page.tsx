@@ -22,7 +22,7 @@ export default function LandingPage() {
             <Link href="/signup" className="btn-staxx h-12 px-8 text-sm">Start Free — No Credit Card</Link>
             <Link href="/login" className="inline-flex h-12 items-center rounded-xl border bg-white px-8 text-sm font-semibold text-staxx-indigo hover:bg-muted transition-colors">Sign In</Link>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">3 free analyzes · No credit card · No real name required</p>
+          <p className="mt-4 text-xs text-muted-foreground">7-day free trial · No credit card · No real name required</p>
         </div>
       </section>
 

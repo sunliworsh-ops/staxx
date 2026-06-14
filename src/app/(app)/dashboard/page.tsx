@@ -5,7 +5,7 @@ import { Upload, Camera, FileText, ArrowRight, CheckCircle2, Loader2, X, Trash2,
 import { authFetch } from "@/lib/api";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
-interface Stats { income: number; profit: number; estTax: number; taxSaved: number; transactionCount: number; analyzeCount?: number; subscriptionTier?: string; }
+interface Stats { income: number; profit: number; estTax: number; taxSaved: number; transactionCount: number; trialEndsAt?: string; subscriptionTier?: string; }
 interface TrendItem { month: string; income: number; profit: number; }
 interface BreakdownItem { name: string; amount: number; pct: number; }
 interface Insight { category: string; content: string; }
@@ -167,11 +167,14 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold text-staxx-indigo font-display">Dashboard</h1>
           <p className="text-sm text-muted-foreground">
             {hasData ? "Your money, decoded." : "Ready to see how much you actually made?"}
-            {stats?.subscriptionTier === "free" && (
-              <span className="ml-2 text-xs bg-staxx-purple/10 text-staxx-purple rounded-full px-2 py-0.5">
-                {3 - (stats?.analyzeCount || 0)} free left
-              </span>
-            )}
+            {stats?.subscriptionTier === "free" && stats?.trialEndsAt && (() => {
+              const daysLeft = Math.max(0, Math.ceil((new Date(stats.trialEndsAt).getTime() - Date.now()) / 86400000));
+              return (
+                <span className={`ml-2 text-xs rounded-full px-2 py-0.5 ${daysLeft <= 2 ? 'bg-red-50 text-red-600' : 'bg-staxx-purple/10 text-staxx-purple'}`}>
+                  {daysLeft > 0 ? `${daysLeft}d left in trial` : 'Trial ended'}
+                </span>
+              );
+            })()}
           </p>
         </div>
         {hasData && (
@@ -247,7 +250,7 @@ export default function DashboardPage() {
         )}
         {importError === "free_limit" ? (
           <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 mt-3 text-center space-y-3">
-            <p className="text-lg font-semibold text-amber-800">🎉 You've used all 3 free analyzes!</p>
+            <p className="text-lg font-semibold text-amber-800">🎉 Your 7-day trial has ended!</p>
             <p className="text-sm text-amber-700">Upgrade to Pro for unlimited analyzes, AI insights, tax write-offs, and PDF exports.</p>
             <a href="/pricing" className="btn-staxx inline-flex h-10 px-6 text-sm">Upgrade to Pro — $19.99/mo</a>
           </div>

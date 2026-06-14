@@ -53,7 +53,7 @@ export default function PricingPage() {
             ))}
           </ul>
           <div id="paypal-button-container-P-2VU04307H85349832NIWDFCQ" className="mt-6 mx-auto max-w-[300px]" />
-          <p className="text-xs text-muted-foreground text-center mt-2">Cancel anytime · 3 free analyzes on signup</p>
+          <p className="text-xs text-muted-foreground text-center mt-2">7-day free trial · Cancel anytime</p>
         </div>
       </div>
     </div>

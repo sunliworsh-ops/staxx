@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const adminClient = createClient(url, serviceKey);
 
     // Create user
-    const { error: createError } = await adminClient.auth.admin.createUser({
+    const { data: createData, error: createError } = await adminClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -26,11 +26,13 @@ export async function POST(request: Request) {
 
     // Sign in with anon key to get browser-compatible session
     const browserClient = createClient(url, anonKey);
-    const { data: loginData, error: loginError } = await browserClient.auth.signInWithPassword({ email, password });
+    // Set 7-day trial
+    await adminClient.from("profiles").update({
+      trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      subscription_tier: "free",
+    }).eq("id", createData?.user?.id || "");
 
-    if (loginError) {
-      return NextResponse.json({ success: true, message: "Account ready! Please sign in." });
-    }
+    const { data: loginData, error: loginError } = await browserClient.auth.signInWithPassword({ email, password });
 
     return NextResponse.json({
       success: true,

@@ -14,12 +14,12 @@ export async function POST(request: Request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Check free tier limits
-    const { data: profile } = await supabase.from("profiles").select("analyze_count, subscription_tier").eq("id", user.id).single();
+    // Check trial status
+    const { data: profile } = await supabase.from("profiles").select("trial_ends_at, subscription_tier").eq("id", user.id).single();
     const tier = profile?.subscription_tier || "free";
-    const count = profile?.analyze_count || 0;
-    if (tier === "free" && count >= 3) {
-      return NextResponse.json({ error: "Free limit reached. 3 analyzes used — upgrade to Pro for unlimited." }, { status: 402 });
+    const trialEnded = profile?.trial_ends_at && new Date(profile.trial_ends_at) < new Date();
+    if (tier === "free" && trialEnded) {
+      return NextResponse.json({ error: "Your 7-day free trial has ended. Upgrade to Pro to continue." }, { status: 402 });
     }
 
     const formData = await request.formData();
@@ -106,11 +106,6 @@ export async function POST(request: Request) {
         fees: newTx.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0),
         skipped: result.transactions.length - newTx.length,
       });
-    }
-
-    // Increment analyze count for free users
-    if (tier === "free" && totalNewTx > 0) {
-      await supabase.from("profiles").update({ analyze_count: count + 1 }).eq("id", user.id);
     }
 
     return NextResponse.json({
