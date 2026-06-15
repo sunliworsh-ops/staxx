@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, type DragEvent } from "react";
-import { Upload, Camera, FileText, ArrowRight, CheckCircle2, Loader2, X, Trash2, ChevronDown, AlertTriangle, TrendingUp, PieChart } from "lucide-react";
+import { Upload, Camera, FileText, ArrowRight, CheckCircle2, Loader2, X, Trash2, ChevronDown, AlertTriangle, TrendingUp, PieChart, Crown } from "lucide-react";
 import { authFetch } from "@/lib/api";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
@@ -175,6 +175,11 @@ export default function DashboardPage() {
                 </span>
               );
             })()}
+            {stats?.subscriptionTier === "free" && (
+              <a href="/pricing" className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-staxx-indigo hover:bg-amber-300 transition-colors no-underline">
+                <Crown className="h-3 w-3" /> Upgrade
+              </a>
+            )}
           </p>
         </div>
         {hasData && (

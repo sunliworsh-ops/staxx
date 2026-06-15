@@ -40,10 +40,11 @@ export default function LandingPage() {
             <Link href="/login" className="inline-flex h-12 items-center rounded-xl border bg-white px-8 text-sm font-semibold text-staxx-indigo hover:bg-muted transition-colors">Sign In</Link>
           </div>
           <div className="mt-6 flex flex-col items-center gap-2">
-            <p className="text-sm text-muted-foreground">Already know you want Pro?</p>
-            <div id="paypal-hero" className="w-64" />
+            <Link href="/pricing" className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-2 text-sm font-semibold text-staxx-indigo hover:bg-amber-300 transition-colors">
+              💎 Upgrade to Pro — $19.99/mo
+            </Link>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">7-day free trial · No credit card · No real name required</p>
+          <p className="mt-4 text-xs text-muted-foreground">7-day free trial · No credit card · No real name required</p>
         </div>
       </section>
 
