@@ -1,6 +1,23 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
 
 export default function LandingPage() {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://www.paypal.com/sdk/js?client-id=AQR_tnfN5I4ZXURBbUfyUcXBUUHvPh_kLuvC2xU4vk3hyT8__fxriomEeOQXjvS7VCPHdKTb-3saTZSN&vault=true&intent=subscription";
+    script.onload = () => {
+      if ((window as any).paypal) {
+        (window as any).paypal.Buttons({
+          style: { shape: "rect", color: "gold", layout: "horizontal", label: "subscribe" },
+          createSubscription: (_d: any, a: any) => a.subscription.create({ plan_id: "P-2VU04307H85349832NIWDFCQ" }),
+          onApprove: () => alert("Thanks! Refresh the page and sign in to continue."),
+        }).render("#paypal-hero");
+      }
+    };
+    document.body.appendChild(script);
+  }, []);
   return (
     <div className="bg-staxx-warm-bg">
       {/* Hero */}
@@ -22,7 +39,11 @@ export default function LandingPage() {
             <Link href="/signup" className="btn-staxx h-12 px-8 text-sm">Start Free — No Credit Card</Link>
             <Link href="/login" className="inline-flex h-12 items-center rounded-xl border bg-white px-8 text-sm font-semibold text-staxx-indigo hover:bg-muted transition-colors">Sign In</Link>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">7-day free trial · No credit card · No real name required</p>
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <p className="text-sm text-muted-foreground">Already know you want Pro?</p>
+            <div id="paypal-hero" className="w-64" />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">7-day free trial · No credit card · No real name required</p>
         </div>
       </section>
 
