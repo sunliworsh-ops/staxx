@@ -24,7 +24,10 @@ export default function LandingPage() {
       <section className="relative overflow-hidden px-4 pt-24 pb-12 sm:pt-32 sm:pb-16 text-center">
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,#C4B5FD,transparent)]" />
         <div className="mx-auto max-w-3xl">
-          <div className="mb-8 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-staxx-purple text-white text-2xl font-bold shadow-purple">S</div>
+          <div className="mb-8 inline-flex items-center gap-3">
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-staxx-purple text-white text-2xl font-bold shadow-purple">S</span>
+            <span className="text-3xl font-bold tracking-tight text-staxx-indigo font-display">Staxx</span>
+          </div>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border bg-white/80 px-4 py-1.5 text-sm backdrop-blur">
             <span className="h-2 w-2 rounded-full bg-staxx-mint animate-pulse" />
             Built for creators, by creators
