@@ -176,8 +176,8 @@ export default function DashboardPage() {
               );
             })()}
             {stats?.subscriptionTier === "free" && (
-              <a href="/pricing" className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-400 px-3 py-1 text-xs font-semibold text-staxx-indigo hover:bg-amber-300 transition-colors no-underline">
-                <Crown className="h-3 w-3" /> Upgrade
+              <a href="/pricing" className="ml-2 inline-flex items-center gap-1 rounded-full bg-amber-400 px-4 py-1.5 text-xs font-semibold text-staxx-indigo hover:bg-amber-300 transition-colors no-underline">
+                <Crown className="h-3 w-3" /> Upgrade to Pro — $19.99/mo
               </a>
             )}
           </p>
