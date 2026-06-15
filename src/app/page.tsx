@@ -41,7 +41,7 @@ export default function LandingPage() {
           </div>
           <div className="mt-6 flex flex-col items-center gap-2">
             <Link href="/pricing" className="inline-flex items-center gap-2 rounded-xl bg-amber-400 px-5 py-2 text-sm font-semibold text-staxx-indigo hover:bg-amber-300 transition-colors">
-              💎 Upgrade to Pro — $19.99/mo
+              👑 Upgrade to Pro — $19.99/mo
             </Link>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">7-day free trial · No credit card · No real name required</p>
