@@ -1,47 +1,76 @@
 {
-  "name": "Staxx — Twitter Weekly Content Scheduler",
-  "description": "Auto-post tweets on a schedule. Write 7 tweets once a week, Make posts them daily.",
-  "modules": [
+  "name": "🐦 Staxx — Twitter Daily Scheduler",
+  "description": "Reads pre-written tweets from a Google Sheet and posts one per day to Twitter/X.",
+  "flow": [
     {
       "id": 1,
-      "type": "google-sheets:watch-rows",
-      "label": "📋 Watch Tweets sheet for new rows",
+      "module": "google-sheets:SearchRows",
+      "version": 1,
       "parameters": {
-        "spreadsheet_id": "{{your_sheet_id}}",
-        "sheet_name": "Tweets",
-        "limit": 1
+        "spreadsheetId": "{{SPREADSHEET_ID}}",
+        "sheetName": "Tweets",
+        "filter": "status = ready",
+        "limit": 1,
+        "sortOrder": "date asc"
+      },
+      "mapper": {
+        "date": "{{row.date}}",
+        "tweet_text": "{{row.tweet_text}}",
+        "image_url": "{{row.image_url}}",
+        "row_number": "{{row.row_number}}"
+      },
+      "metadata": {
+        "designer": { "x": 0, "y": 0, "name": "📋 Read next tweet from Sheet" }
       }
     },
     {
       "id": 2,
-      "type": "util:filter",
-      "label": "🎯 Only process rows marked 'ready'",
+      "module": "twitter:CreateTweet",
+      "version": 1,
       "parameters": {
-        "field": "status",
-        "operator": "equals",
-        "value": "ready"
+        "text": "{{1.tweet_text}}",
+        "mediaUrl": "{{1.image_url}}"
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 300, "y": 0, "name": "🐦 Post to Twitter" }
       }
     },
     {
       "id": 3,
-      "type": "twitter:create-tweet",
-      "label": "🐦 Post tweet",
+      "module": "google-sheets:UpdateRow",
+      "version": 1,
       "parameters": {
-        "text": "{{tweet_text}}"
-      }
-    },
-    {
-      "id": 4,
-      "type": "google-sheets:update-row",
-      "label": "✅ Mark as posted",
-      "parameters": {
-        "spreadsheet_id": "{{your_sheet_id}}",
-        "sheet_name": "Tweets",
-        "row": "{{row_number}}",
-        "status": "posted",
-        "posted_at": "{{now}}"
+        "spreadsheetId": "{{SPREADSHEET_ID}}",
+        "sheetName": "Tweets",
+        "rowNumber": "{{1.row_number}}",
+        "values": {
+          "status": "posted"
+        }
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": { "x": 600, "y": 0, "name": "✅ Mark as posted" }
       }
     }
   ],
-  "setup_instructions": "1. Create a Google Sheet with columns: date, tweet_text, status\n2. Write 7 tweets in the 'tweet_text' column, set status to 'ready'\n3. Connect Google Sheets and Twitter accounts in Make\n4. Set scenario to run once per day at 10:00 AM EST\n\nSample tweets to populate the sheet:\n\n1. 'Most OnlyFans creators leave $3-5K/year in missed tax deductions on the table. Camera gear, editing software, internet, home studio — all deductible. Made a checklist: staxx.site'\n\n2. 'Built something: upload your OF dashboard screenshot → AI auto-categorizes everything → tells you what to save for quarterly taxes. staxx.site #buildinpublic'\n\n3. 'The IRS charges ~8% penalty interest on missed quarterly tax payments. Deadlines: Apr 15 / Jun 15 / Sep 15 / Jan 15. I built Staxx (staxx.site) to track this automatically.'\n\n4. '3 tax mistakes new OF creators make: 1) Not tracking platform fees as expenses 2) Not paying quarterly estimates 3) Mixing personal & business expenses. Fix all 3: staxx.site'\n\n5. 'OnlyFans takes 20%. Patreon 8-12%. Fansly 20%. ManyVids 40%. That fee difference alone is worth tracking. staxx.site auto-calculates your real net across platforms.'\n\n6. 'Week 1 building Staxx: shipped screenshot→transaction AI, 12-point write-off checklist, quarterly tax estimator. Now working on multi-platform support. Try it: staxx.site'\n\n7. 'First user found $4,700 in missed write-offs. Lighting equipment. Home studio. Editing subscriptions. All deductible. Their reaction: I wish I knew this last year. staxx.site'"
+  "metadata": {
+    "version": 1,
+    "scheduling": {
+      "interval": 1,
+      "unit": "days",
+      "at": "18:00"
+    }
+  },
+  "setup": {
+    "spreadsheet_columns": "date | tweet_text | image_url | status",
+    "sample_tweets": [
+      "Most OnlyFans creators leave $3-5K/year in missed tax deductions. Camera gear, editing software, internet, home studio — deductible. Checklist: staxx.site",
+      "Built something: upload your OF dashboard → AI categorizes everything → tells you what to save for taxes. staxx.site #buildinpublic",
+      "IRS charges ~8% penalty on missed quarterly payments. Deadlines: Apr 15 / Jun 15 / Sep 15 / Jan 15. Track automatically: staxx.site",
+      "OnlyFans 20%. Patreon 8%. Fansly 20%. ManyVids 40%. That fee difference = $1000s/year if you optimize platforms. staxx.site",
+      "First Staxx user found $4,700 in missed write-offs. Camera, lighting, editing software, home studio. All deductible. staxx.site",
+      "3 tax mistakes OF creators make: 1) Not tracking platform fees 2) Missing quarterly estimates 3) Mixing personal/business. Fix: staxx.site"
+    ]
+  }
 }

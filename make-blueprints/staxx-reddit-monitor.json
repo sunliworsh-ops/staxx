@@ -1,44 +1,54 @@
 {
-  "name": "Staxx — Reddit Tax Question Monitor",
-  "description": "Watch Reddit for tax-related questions and alert you to reply. Runs every 15 minutes.",
-  "modules": [
+  "name": "⚡ Staxx — Reddit Tax Monitor",
+  "description": "Monitor r/OnlyFansAdvice and r/CreatorsAdvice for tax questions. Email alert when a new question is found.",
+  "flow": [
     {
       "id": 1,
-      "type": "rss:watch",
-      "label": "🔍 Watch r/OnlyFansAdvice for tax questions",
+      "module": "rss:RetrieveFeedItems",
+      "version": 1,
       "parameters": {
-        "url": "https://www.reddit.com/r/onlyfansadvice/search.rss?q=tax+OR+write+OR+deduction+OR+1099+OR+quarterly+OR+bookkeeping+OR+CPA&sort=new&restrict_sr=on",
-        "interval": 15
+        "url": "https://www.reddit.com/r/onlyfansadvice/search.rss?q=tax+OR+write+OR+deduction+OR+1099+OR+quarterly+OR+CPA&sort=new&restrict_sr=on",
+        "maximumNumberOfReturnedItems": 5
+      },
+      "mapper": {
+        "title": "{{entry.title}}",
+        "link": "{{entry.link}}",
+        "content": "{{entry.content}}",
+        "author": "{{entry.author}}"
+      },
+      "metadata": {
+        "designer": {
+          "x": 0,
+          "y": 0,
+          "name": "🔍 Reddit RSS Feed"
+        }
       }
     },
     {
       "id": 2,
-      "type": "rss:watch",
-      "label": "🔍 Watch r/CreatorsAdvice for tax questions",
-      "parameters": {
-        "url": "https://www.reddit.com/r/creatorsadvice/search.rss?q=tax+OR+write+OR+deduction+OR+1099+OR+quarterly&sort=new&restrict_sr=on",
-        "interval": 15
-      }
-    },
-    {
-      "id": 3,
-      "type": "util:filter",
-      "label": "🎯 Filter: only posts with comments < 10 (fresh questions)",
-      "parameters": {
-        "field": "comments",
-        "operator": "less_than",
-        "value": 10
-      }
-    },
-    {
-      "id": 4,
-      "type": "email:send",
-      "label": "📧 Email me the post link + suggested reply",
+      "module": "email:SendEmail",
+      "version": 1,
       "parameters": {
         "to": "{{your_email}}",
-        "subject": "🔔 New Reddit tax question: {{title}}",
-        "content": "Post: {{link}}\n\nSubreddit: r/{{subreddit}}\nTitle: {{title}}\n\n--- Suggested Reply ---\nYou're self-employed → file Schedule C. Budget 25-30% of net for taxes. Track everything: equipment, software, internet, platform fees — all deductible.\n\nI built Staxx (staxx.site) — upload an OF dashboard screenshot, AI categorizes everything and estimates your quarterly tax. 7-day free trial.\n\n---\n\n⚠️ Customize the reply to match their specific question before posting."
+        "subject": "🔔 [Reddit Tax Q] {{1.title}}",
+        "contentType": "text/plain",
+        "content": "━━━━━━━━━━━━━━━━━━━━\n📝 New tax question on Reddit!\n━━━━━━━━━━━━━━━━━━━━\n\nPost: {{1.link}}\nTitle: {{1.title}}\n\n📋 Quick Reply Template:\n\"You're self-employed → file Schedule C. Budget 25-30% of net for taxes (income tax + 15.3% SE tax). Track everything: equipment, software, internet, platform fees — all deductible.\n\nI built Staxx (staxx.site) — upload an OF dashboard screenshot, AI categorizes everything and estimates your quarterly tax. 7-day free trial.\"\n\n⚠️ Add 1-2 sentences specific to their question before the template."
+      },
+      "mapper": {},
+      "metadata": {
+        "designer": {
+          "x": 300,
+          "y": 0,
+          "name": "📧 Email Alert"
+        }
       }
     }
-  ]
+  ],
+  "metadata": {
+    "version": 1,
+    "scheduling": {
+      "interval": 15,
+      "unit": "minutes"
+    }
+  }
 }
