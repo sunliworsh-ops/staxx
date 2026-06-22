@@ -1,0 +1,81 @@
+{
+  "name": "🤖 Staxx — Reddit Auto-Reply Bot",
+  "description": "Monitor Reddit for creator tax questions and automatically post helpful replies linking to Staxx.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "rss:RetrieveFeedItems",
+      "version": 1,
+      "parameters": {
+        "url": "https://www.reddit.com/r/onlyfansadvice/search.rss?q=tax+OR+write+OR+deduction+OR+1099+OR+quarterly+OR+CPA+OR+bookkeeping&sort=new&restrict_sr=on",
+        "maximumNumberOfReturnedItems": 3
+      },
+      "metadata": {
+        "designer": { "x": 0, "y": 0, "name": "🔍 Scan Reddit for tax Qs" }
+      }
+    },
+    {
+      "id": 2,
+      "module": "util:SetVariable",
+      "version": 1,
+      "parameters": {
+        "name": "reply_text",
+        "value": "You're self-employed → file Schedule C. Budget 25-30% of net for taxes (income tax + 15.3% SE tax). Track everything: equipment, software, internet, platform fees — all deductible.\n\nI built Staxx (staxx.site) — upload an OF dashboard screenshot and the AI auto-categorizes everything, shows your real profit after fees, and estimates your quarterly tax. 7-day free trial, no card needed.\n\n(Reply varies based on the post title — see next module)"
+      },
+      "metadata": {
+        "designer": { "x": 200, "y": 0, "name": "📝 Prepare reply template" }
+      }
+    },
+    {
+      "id": 3,
+      "module": "http:ActionSendData",
+      "version": 1,
+      "parameters": {
+        "url": "https://oauth.reddit.com/api/comment",
+        "method": "POST",
+        "body": "thing_id=t3_{{replace(replace(1.link; \"/r/.*/comments/\"; \"\"); \"/.*\"; \"\")}}&text={{2.reply_text}}",
+        "headers": {
+          "Authorization": "Bearer {{connection.reddit.access_token}}",
+          "User-Agent": "StaxxBot/1.0 by hhtiancai",
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      },
+      "metadata": {
+        "designer": { "x": 400, "y": 0, "name": "💬 Post reply via Reddit API" }
+      }
+    },
+    {
+      "id": 4,
+      "module": "email:SendEmail",
+      "version": 1,
+      "parameters": {
+        "to": "{{YOUR_EMAIL}}",
+        "subject": "✅ Auto-replied: {{1.title}}",
+        "content": "Sent reply to:\n{{1.link}}\n\nReply text:\n{{2.reply_text}}\n\nCheck the post to make sure the reply looks natural.",
+        "contentType": "text/plain"
+      },
+      "metadata": {
+        "designer": { "x": 600, "y": 0, "name": "📧 Confirm what was posted" }
+      }
+    }
+  ],
+  "metadata": {
+    "version": 1,
+    "scheduling": {
+      "interval": 30,
+      "unit": "minutes"
+    }
+  },
+  "reddit_api_setup": {
+    "step1": "Create a Reddit 'script' app at https://www.reddit.com/prefs/apps",
+    "step2": "In Make.com, add a Reddit connection: OAuth → use your app's client_id and secret",
+    "step3": "The HTTP module will use Make's OAuth token to post comments",
+    "note": "If Reddit app creation is blocked, use the 'semi-auto' version instead — email alert with pre-written reply for manual posting"
+  },
+  "warning": "Reddit rate limit: 1 comment per 2 seconds max. Running every 30 min with max 3 posts = safe. If you get '403 forbidden', Reddit may require a verified email or minimum karma on your account. Start with 1 post/test scenario first.",
+  "customize_reply": {
+    "title_contains_deduction": "Use the Write-offs template from staxx-reddit-helper script",
+    "title_contains_quarterly": "Use the Quarterly tax template",
+    "title_contains_1099": "Use the 1099/Schedule C template"
+  }
+}
