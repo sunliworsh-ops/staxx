@@ -1,0 +1,18 @@
+{
+  "name": "Staxx — Blog RSS → Auto-Tweet New Articles",
+  "description": "When a new Staxx blog post is published, automatically tweet about it.",
+  "scenario_structure": {
+    "trigger": {
+      "type": "rss:watch",
+      "label": "📡 Watch staxx.site/blog RSS",
+      "url": "https://staxx.site/blog/rss.xml",
+      "interval_minutes": 60
+    },
+    "action": {
+      "type": "twitter:create-tweet",
+      "label": "🐦 Post to Twitter",
+      "text_template": "📝 New on the Staxx Blog: {{entry.title}}\n\n{{entry.description | truncate(100)}}\n\nRead: {{entry.link}}\n\n#creatoreconomy #onlyfans #taxes"
+    }
+  },
+  "setup_note": "You need to add an RSS feed to staxx.site/blog. Currently the blog uses static pages. To enable this, add an RSS feed route at /blog/rss.xml."
+}
